@@ -2,10 +2,8 @@ package org.abc.utils;
 
 import org.abc.common.CommonConstant;
 import org.abc.model.Customer;
-import org.abc.model.Food;
 import org.abc.model.Order;
 
-import java.util.HashMap;
 import java.util.Queue;
 import java.util.Scanner;
 
@@ -35,36 +33,13 @@ public class TimeSlotUtil {
 
         System.out.print("Enter Customer " + index + " contact number : ");
         String contactNumber = scanner.nextLine();
-        if (!InputUtil.isValidNumber(contactNumber)) {
-            System.out.println("Invalid value entered !!");
+        if (!InputUtil.isvalidContactNumber(contactNumber)) {
+            System.out.println("Invalid contact number entered, should have 10 digit!!");
             return;
         }
 
-        HashMap<Food, Double> orderList = new HashMap<>();
-        while (true) {
-            System.out.print("Enter food name to order (-1 to exit) : ");
-            String foodName = scanner.nextLine();
-            if (foodName.equals("-1") || !InputUtil.isValidString(foodName)) {
-                break;
-            }
-
-            System.out.print("Enter quantity : ");
-            String quantity = scanner.nextLine();
-            if (!InputUtil.isValidNumber(quantity)) {
-                System.out.println("Invalid value entered !!");
-                return;
-            }
-
-            Food food = new Food(foodName);
-            orderList.put(food, Double.valueOf(quantity));
-
-        }
-
         Order order = new Order();
-        order.setItems(orderList);
-
         Customer customer = new Customer(name, contactNumber, order);
-
         CommonConstant.reservedCustomers.add(customer);
     }
 
@@ -84,6 +59,7 @@ public class TimeSlotUtil {
                 customerFound = true;
 
                 System.out.println("\nMake a call to Customer contact number : " + customer.getContactNumber());
+                System.out.println(3 - customer.getOrder().getConfirmationAttempts() + " Attempt(s) reaming to confirm the order!!\n");
 
                 System.out.print("Confirmed(1) || Canceled(2) || No Answer(3) : ");
                 int confirmation = scanner.nextInt();
@@ -125,15 +101,15 @@ public class TimeSlotUtil {
 
             switch (choice) {
                 case 1:
-                    System.out.println("Reserved customers\n");
+                    System.out.println("\nReserved customers");
                     TimeSlotUtil.displaySlot(CommonConstant.reservedCustomers);
                     break;
                 case 2:
-                    System.out.println("Confirmed customers\n");
+                    System.out.println("\nConfirmed customers");
                     TimeSlotUtil.displaySlot(CommonConstant.confirmedCustomers);
                     break;
                 case 3:
-                    System.out.println("Canceled customers\n");
+                    System.out.println("\nCanceled customers");
                     TimeSlotUtil.displaySlot(CommonConstant.canceledCustomers);
                     break;
                 case 4:
@@ -148,10 +124,10 @@ public class TimeSlotUtil {
     }
 
     public static void displaySlot(Queue<Customer> customers) {
-        System.out.println("CustomerName\t\tContactNumber\t\torderID\t\titems");
+        System.out.println("CustomerName\t\tContactNumber\t\torderID");
         System.out.println("-----------------------------------------------------------------");
         for (Customer customer : customers) {
-            System.out.println(customer.getCustomerName() + "\t\t" + customer.getContactNumber() + "\t\t" + customer.getOrder().getOrderID() + "\t\t" + customer.getOrder().getItemsToPrint());
+            System.out.println(customer.getCustomerName() + "\t\t" + customer.getContactNumber() + "\t\t" + customer.getOrder().getOrderID());
         }
     }
 }
