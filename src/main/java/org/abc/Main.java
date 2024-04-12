@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Main {
 
     static {
-        TimeSlotUtil.generateTimeSlotForTheDay();
+        System.out.println("\nHey, Good morning!\nYou can reserve customers for the slot 6PM - 7PM\n");
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -16,13 +16,12 @@ public class Main {
         boolean running = true;
 
         while (running) {
-            System.out.println("1. Reserve a delivery slot");
-            System.out.println("2. Confirm a delivery slot");
-            System.out.println("3. Exit");
-            System.out.print("Enter your choice: ");
+            System.out.println("\n1. Reserve slot");
+            System.out.println("2. Confirm a customer");
+            System.out.println("3. Display slot details");
+            System.out.println("4. Exit\n");
+            System.out.print("Enter your choice : ");
             int choice = scanner.nextInt();
-
-            Thread.sleep(100);
 
             switch (choice) {
                 case 1:
@@ -32,6 +31,9 @@ public class Main {
                     TimeSlotUtil.confirmSlot();
                     break;
                 case 3:
+                    TimeSlotUtil.displaySlots();
+                    break;
+                case 4:
                     running = false;
                     break;
                 default:
@@ -39,9 +41,7 @@ public class Main {
                     break;
             }
 
-
         }
         scanner.close();
-
     }
 }

@@ -2,109 +2,156 @@ package org.abc.utils;
 
 import org.abc.common.CommonConstant;
 import org.abc.model.Customer;
+import org.abc.model.Food;
 import org.abc.model.Order;
-import org.abc.model.TimeSlot;
 
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDateTime;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class TimeSlotUtil {
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void reserveSlot() {
-        System.out.print("Enter Customer name: ");
+        System.out.print("Enter number of Customers to reserve : ");
+        String count = scanner.nextLine();
+        if (!InputUtil.isValidNumber(count)) {
+            System.out.println("Invalid value entered !!");
+            return;
+        }
+        CommonConstant.customerPerSlot = Integer.parseInt(count);
+        for (int i = 1; i <= Integer.parseInt(count); i++) {
+            reserveOneCustomer(i);
+        }
+    }
+
+    public static void reserveOneCustomer(int index) {
+        System.out.print("\nEnter Customer " + index + " name : ");
         String name = scanner.nextLine();
-        System.out.print("Enter Customer contact number: ");
-        String contactNumber = scanner.nextLine();
-        Customer customer = new Customer(name, contactNumber);
-
-        System.out.print("Enter Order ID: ");
-        String orderID = scanner.nextLine();
-        Order order = new Order(orderID, customer);
-
-        System.out.println();
-        System.out.println("Following are available timeslots");
-        for (TimeSlot timeSlot : CommonConstant.availableTimeSlots) {
-            System.out.println(timeSlot.getStartHour() + ":00 - " + timeSlot.getEndHour() + ":00\t\tID : " + timeSlot.getSlotID());
+        if (!InputUtil.isValidString(name)) {
+            System.out.println("Invalid value entered !!");
+            return;
         }
 
-        System.out.print("Enter slot ID :");
-        int slotID = scanner.nextInt();
-        Iterator<TimeSlot> iterator = CommonConstant.availableTimeSlots.iterator();
+        System.out.print("Enter Customer " + index + " contact number : ");
+        String contactNumber = scanner.nextLine();
+        if (!InputUtil.isValidNumber(contactNumber)) {
+            System.out.println("Invalid value entered !!");
+            return;
+        }
 
-        while (iterator.hasNext()) {
-            TimeSlot timeSlot = iterator.next();
-            if (timeSlot.getSlotID() == slotID) {
-                if (timeSlot.isReserved()) {
-                    System.out.print("Entered slot is not available");
-                    break;
-                }
-                timeSlot.setReserved(true);
-                timeSlot.setOrder(order);
-
-                CommonConstant.availableTimeSlots.remove(timeSlot);
-                CommonConstant.reservedTimeSlots.add(timeSlot);
-
+        HashMap<Food, Double> orderList = new HashMap<>();
+        while (true) {
+            System.out.print("Enter food name to order (-1 to exit) : ");
+            String foodName = scanner.nextLine();
+            if (foodName.equals("-1") || !InputUtil.isValidString(foodName)) {
                 break;
             }
+
+            System.out.print("Enter quantity : ");
+            String quantity = scanner.nextLine();
+            if (!InputUtil.isValidNumber(quantity)) {
+                System.out.println("Invalid value entered !!");
+                return;
+            }
+
+            Food food = new Food(foodName);
+            orderList.put(food, Double.valueOf(quantity));
+
         }
+
+        Order order = new Order();
+        order.setItems(orderList);
+
+        Customer customer = new Customer(name, contactNumber, order);
+
+        CommonConstant.reservedCustomers.add(customer);
     }
 
-
-    public static void generateTimeSlotForTheDay() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        LocalDateTime now = LocalDateTime.now();
-        String today = dtf.format(now);
-
-        int ID = 1;
-        for (int i = 7; i < 22; i++) {
-            TimeSlot timeSlot = new TimeSlot(ID, String.valueOf(i), String.valueOf(i + 1), today, false);
-            CommonConstant.availableTimeSlots.add(timeSlot);
-            ID++;
-        }
-    }
 
     public static void confirmSlot() {
-        System.out.print("Enter customer name: ");
+        System.out.print("Enter customer name : ");
         String name = scanner.nextLine();
-        boolean slotFound = false;
+        if (!InputUtil.isValidString(name)) {
+            System.out.println("Invalid value entered !!");
+            return;
+        }
 
-        for (TimeSlot timeSlot : CommonConstant.reservedTimeSlots) {
-            if (timeSlot.getOrder().getCustomer().getCustomerName().equals(name)) {
-                System.out.println("Customer contact number : " + timeSlot.getOrder().getCustomer().getContactNumber());
-                if (timeSlot.getConfirmationAttempts() >= 3) {
-                    System.out.println("Maximum confirmation attempts are finished");
-                    break;
-                } else {
-                    System.out.print("Confirmed(1) || Canceled(2) || No Answer(3) : ");
-                    int confirmation = scanner.nextInt();
+        boolean customerFound = false;
 
-                    if (confirmation == 2) {
-                        timeSlot.setReserved(false);
-                        timeSlot.setOrder(null);
-                        CommonConstant.reservedTimeSlots.remove(timeSlot);
-                        CommonConstant.availableTimeSlots.add(timeSlot);
-                    } else if (confirmation == 3) {
-                        if (timeSlot.getConfirmationAttempts() == 2) {
-                            timeSlot.setReserved(false);
-                            timeSlot.setOrder(null);
-                            CommonConstant.reservedTimeSlots.remove(timeSlot);
-                            CommonConstant.availableTimeSlots.add(timeSlot);
-                        }
-                    } else if (confirmation == 1) {
-                        CommonConstant.reservedTimeSlots.remove(timeSlot);
-                        CommonConstant.confirmedTimeSlots.add(timeSlot);
+        for (Customer customer : CommonConstant.reservedCustomers) {
+            if (customer.getCustomerName().equals(name)) {
+                customerFound = true;
+
+                System.out.println("\nMake a call to Customer contact number : " + customer.getContactNumber());
+
+                System.out.print("Confirmed(1) || Canceled(2) || No Answer(3) : ");
+                int confirmation = scanner.nextInt();
+
+                if (confirmation == 2) {
+                    CommonConstant.reservedCustomers.remove(customer);
+                    CommonConstant.canceledCustomers.add(customer);
+                } else if (confirmation == 3) {
+                    if (customer.getOrder().getConfirmationAttempts() == 2) {
+                        CommonConstant.reservedCustomers.remove(customer);
+                        CommonConstant.canceledCustomers.add(customer);
                     }
-                    timeSlot.setConfirmationAttempts(timeSlot.getConfirmationAttempts() + 1);
+                } else if (confirmation == 1) {
+                    CommonConstant.reservedCustomers.remove(customer);
+                    CommonConstant.confirmedCustomers.add(customer);
                 }
+                customer.getOrder().setConfirmationAttempts(customer.getOrder().getConfirmationAttempts() + 1);
+
                 break;
             }
         }
 
-        if (!slotFound) {
-            System.out.println("Slot not found. Please make a reservation first.");
+        if (!customerFound) {
+            System.out.println("Customer not found. Please make a reservation first.\n");
+        }
+
+    }
+
+    public static void displaySlots() {
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n1. Reserved customers");
+            System.out.println("2. Confirmed customers");
+            System.out.println("3. Canceled customers");
+            System.out.println("4. Exit\n");
+            System.out.print("Enter your choice : ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Reserved customers\n");
+                    TimeSlotUtil.displaySlot(CommonConstant.reservedCustomers);
+                    break;
+                case 2:
+                    System.out.println("Confirmed customers\n");
+                    TimeSlotUtil.displaySlot(CommonConstant.confirmedCustomers);
+                    break;
+                case 3:
+                    System.out.println("Canceled customers\n");
+                    TimeSlotUtil.displaySlot(CommonConstant.canceledCustomers);
+                    break;
+                case 4:
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+                    break;
+            }
+        }
+
+    }
+
+    public static void displaySlot(Queue<Customer> customers) {
+        System.out.println("CustomerName\t\tContactNumber\t\torderID\t\titems");
+        System.out.println("-----------------------------------------------------------------");
+        for (Customer customer : customers) {
+            System.out.println(customer.getCustomerName() + "\t\t" + customer.getContactNumber() + "\t\t" + customer.getOrder().getOrderID() + "\t\t" + customer.getOrder().getItemsToPrint());
         }
     }
 }

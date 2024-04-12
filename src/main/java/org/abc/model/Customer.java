@@ -3,13 +3,15 @@ package org.abc.model;
 public class Customer {
     private String customerName;
     private String contactNumber;
+    private Order order;
 
     public Customer() {
     }
 
-    public Customer(String customerName, String contactNumber) {
+    public Customer(String customerName, String contactNumber, Order order) {
         this.customerName = customerName;
         this.contactNumber = contactNumber;
+        this.order = order;
     }
 
     public String getCustomerName() {
@@ -26,5 +28,13 @@ public class Customer {
 
     public void setContactNumber(String contactNumber) {
         this.contactNumber = contactNumber;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 }
